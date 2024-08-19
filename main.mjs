@@ -1,5 +1,5 @@
-import {Vector} from "./vector.mjs";
-import {lerpVec, scale} from "./utils.mjs";
+import {DragonCurve} from "./dragoncurve.js";
+import {lerp} from "./utils.mjs";
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext('2d');
@@ -24,15 +24,23 @@ const updateWorldSettings = () => {
 
 updateWorldSettings();
 
-const vec1 = new Vector(500, 100);
-const vec2 = new Vector(400, 500);
+const dragonCurve = new DragonCurve();
+dragonCurve.init();
+let foldCounter = 0;
+let movingDragonCurve = dragonCurve.clone();
+
 let t = 0;
+const tStep = 0.005;
+
+let scaleFactor = 10;
+
 
 const update = () => {
 
   ctx.fillStyle = "white";
   ctx.strokeStyle = "white";
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 0.1;
+  ctx.lineCap = "round";
 
   if (worldUpdated) {
     worldUpdated = false;
@@ -40,22 +48,32 @@ const update = () => {
   ctx.clearRect(0, 0, worldWidth, worldHeight);
 
   ctx.save();
-  // ctx.translate(10, 0);
 
-  const actTarget = lerpVec(vec1, vec2, t);
-  ctx.beginPath();
+  const curveEnd = dragonCurve.getEnd();
+  ctx.translate(worldWidth2, worldHeight2);
+  const scaleVal = Math.min(worldWidth / scaleFactor, worldWidth / scaleFactor);
+  ctx.scale(scaleVal, scaleVal);
 
-  const yStart = scale(t, 0, 1, 100, -50);
+  dragonCurve.draw(ctx);
 
-  ctx.moveTo(0, yStart);
-  ctx.lineTo(actTarget.x, actTarget.y);
-  ctx.stroke();
+  if (foldCounter < 18) {
+    scaleFactor *= 1.0015;
+    ctx.translate(curveEnd.x, curveEnd.y);
+    ctx.strokeStyle = "red";
+    t += tStep;
+    if (t > 1) {
+      t = 0;
+      dragonCurve.fold();
+      foldCounter++;
+      movingDragonCurve = dragonCurve.clone();
+    } else if (movingDragonCurve) {
+      ctx.rotate(lerp(0, Math.PI / 2, t));
+      movingDragonCurve.draw(ctx, true);
+    }
+  }
+
 
   ctx.restore();
-
-  t += 0.01;
-  if (t > 1)
-    t = 0;
 
   updateWorldSettings();
 
