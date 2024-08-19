@@ -70,12 +70,21 @@ class Vector {
     return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
   }
 
+  rotateAround(rotationCenter, angle) {
+    const v = this.clone().subVec(rotationCenter);
+    const len = v.len();
+    const targetAngle = v.toRadians() + angle;
+    this.setVec(Vector.fromAngle(targetAngle).mult(len).addVec(rotationCenter));
+    return this;
+  }
+
   normalize() {
     const norm = Vector.fromAngle(this.toRadians());
     this.x = norm.x;
     this.y = norm.y;
     return this;
   }
+
   round() {
     this.x = Math.round(this.x);
     this.y = Math.round(this.y);
